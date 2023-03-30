@@ -55,23 +55,26 @@ public class StartCommandHandler extends UserRequestHandler {
 
     public void registerUser(Message message) {
 
-        Optional<UserStorage> userStorageOptional = userStorageRepository.findById(message.getChatId());
+        var chatId = message.getChatId();
+        var chat = message.getChat();
 
-            var chatId = message.getChatId();
-            var chat = message.getChat();
+        Optional<UserStorage> userStorageOptional = userStorageRepository.findById(chatId);
+        UserStorage userStorage;
 
-            if(userStorageOptional.isPresent()){
-                userStorageOptional.get().setFirstName(chat.getFirstName());
-                userStorageOptional.get().setLastName(chat.getLastName());
-                userStorageOptional.get().setUsername(chat.getUserName());
+        if(userStorageOptional.isPresent()){
+                userStorage = userStorageOptional.get();
+                userStorage.setFirstName(chat.getFirstName());
+                userStorage.setLastName(chat.getLastName());
+                userStorage.setUsername(chat.getUserName());
+                userStorageRepository.save(userStorage);
 
-            } else {
-                UserStorage userStorage = new UserStorage();
+        } else {
+                userStorage = new UserStorage();
                 userStorage.setChatId(chatId);
                 userStorage.setUsername(chat.getUserName());
                 userStorage.setFirstName(chat.getFirstName());
                 userStorage.setLastName(chat.getLastName());
                 userStorageRepository.save(userStorage);
-            }
+                }
     }
 }

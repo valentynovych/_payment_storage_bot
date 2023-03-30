@@ -2,8 +2,8 @@ package org.paymentbot.handler.impl;
 
 import org.paymentbot.model.*;
 import org.paymentbot.repository.PaymentStorageRepository;
+import org.paymentbot.service.UserBalanceStorageService;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.paymentbot.enums.ConversationState;
 import org.paymentbot.handler.UserRequestHandler;
@@ -22,12 +22,14 @@ public class PaymentEnteredHandler extends UserRequestHandler {
     private final KeyboardHelper keyboardHelper;
     private final UserSessionService userSessionService;
     private final PaymentStorageRepository paymentStorageRepository;
+    private final UserBalanceStorageService userBalanceStorageService;
 
-    public PaymentEnteredHandler(TelegramService telegramService, KeyboardHelper keyboardHelper, UserSessionService userSessionService, PaymentStorageRepository paymentStorageRepository) {
+    public PaymentEnteredHandler(TelegramService telegramService, KeyboardHelper keyboardHelper, UserSessionService userSessionService, PaymentStorageRepository paymentStorageRepository, UserBalanceStorageService userBalanceStorageService) {
         this.telegramService = telegramService;
         this.keyboardHelper = keyboardHelper;
         this.userSessionService = userSessionService;
         this.paymentStorageRepository = paymentStorageRepository;
+        this.userBalanceStorageService = userBalanceStorageService;
     }
 
     @Override
@@ -38,16 +40,21 @@ public class PaymentEnteredHandler extends UserRequestHandler {
 
     @Override
     public void handle(UserRequest userRequest) {
+        var chatId = userRequest.getChatId();
+
         ReplyKeyboardMarkup replyKeyboardMarkup = keyboardHelper.buildMenuAfterPayment();
-        String payment = userRequest.getUpdate().getMessage().getText();
-        saveUserPayment(userRequest.getUpdate().getMessage(), payment);
-        telegramService.sendMessage(userRequest.getChatId(), "Дякую !!!\n" +
+        Double payment = Double.valueOf(userRequest.getUpdate().getMessage().getText());
+
+        saveUserPayment(chatId, payment);
+        updateUserBalance(chatId, payment);
+
+        telegramService.sendMessage(chatId, "Дякую !!!\n" +
                 "Твоя оплата у розмірі " + payment + " грн, збережена\n" +
                 "Ти заслуговуєш на + в карму, і на ще один місяць корисування YouTube Premium", replyKeyboardMarkup);
 
         UserSession session = userRequest.getUserSession();
         session.setState(ConversationState.STAY_IN_MENU);
-        userSessionService.saveSession(userRequest.getChatId(), session);
+        userSessionService.saveSession(chatId, session);
     }
 
     @Override
@@ -56,9 +63,8 @@ public class PaymentEnteredHandler extends UserRequestHandler {
     }
 
 
-    public void saveUserPayment(Message message, String payment){
+    public void saveUserPayment(Long chatId, Double payment){
 
-        var chatId = message.getChatId();
         var dtf = DateTimeFormatter.ofPattern("dd/MM/yyy HH:mm");
         var datePayment = LocalDateTime.now();
         String formatDatePayment = datePayment.format(dtf);
@@ -71,5 +77,18 @@ public class PaymentEnteredHandler extends UserRequestHandler {
         paymentStorage.setUserStorage(userStorage);
         paymentStorage.setDate(formatDatePayment);
         paymentStorageRepository.save(paymentStorage);
+    }
+
+    public void updateUserBalance(Long chatId, Double payment){
+        var userBalanceStorage = userBalanceStorageService.findById(chatId);
+        if (userBalanceStorage.isPresent()) {
+            UserBalanceStorage balanceStorage = userBalanceStorage.get();
+            Double balance = balanceStorage.getUserBalance() + payment;
+            balanceStorage.setUserBalance(balance);
+            userBalanceStorageService.updateBalance(balanceStorage.getUserChatId().getChatId(), balanceStorage.getUserBalance());
+        } else {
+
+
+        }
     }
 }

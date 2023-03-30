@@ -1,2 +1,6 @@
 target/
 .idea/
+out/
+demo.gif
+readme.md
+src/main/resources/META-INF/

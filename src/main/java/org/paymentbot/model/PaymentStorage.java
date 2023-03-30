@@ -2,6 +2,7 @@ package org.paymentbot.model;
 
 import javax.persistence.*;
 
+
 @Entity(name = "usersPaymentTable")
 public class PaymentStorage {
     @Id

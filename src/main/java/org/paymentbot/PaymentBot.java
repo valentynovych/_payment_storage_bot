@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.paymentbot.repository.UserStorageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -76,4 +78,5 @@ public class PaymentBot extends TelegramLongPollingBot {
     public String getBotToken() {
         return botToken;
     }
+
 }

@@ -1,21 +1,18 @@
 package org.paymentbot.model;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import java.util.List;
 
-@Entity
-@AllArgsConstructor
-@NoArgsConstructor
-public class UserPaymentDTO {
 
-    private Long userChatId;
+public class UserPaymentDTO{
+
     private String userFirstName;
-    private Double valueUserPayment;
-    @Id
-    private String dateUserPayment;
+    private List<PaymentStorage> paymentStorageList;
+
+    public UserPaymentDTO(String userFirstName, List<PaymentStorage> paymentStorageList){
+        this.userFirstName = userFirstName;
+        this.paymentStorageList = paymentStorageList;
+    }
 
     public String getUserFirstName() {
         return userFirstName;
@@ -25,27 +22,19 @@ public class UserPaymentDTO {
         this.userFirstName = userFirstName;
     }
 
-    public Long getUserChatId() {
-        return userChatId;
+    public List<PaymentStorage> getPaymentStorageList() {
+        return paymentStorageList;
     }
 
-    public void setUserChatId(Long userChatId) {
-        this.userChatId = userChatId;
+    public void setPaymentStorageList(List<PaymentStorage> paymentStorageList) {
+        this.paymentStorageList = paymentStorageList;
     }
 
-    public Double getValueUserPayment() {
-        return valueUserPayment;
-    }
-
-    public void setValueUserPayment(Double valueUserPayment) {
-        this.valueUserPayment = valueUserPayment;
-    }
-
-    public String getDateUserPayment() {
-        return dateUserPayment;
-    }
-
-    public void setDateUserPayment(String dateUserPayment) {
-        this.dateUserPayment = dateUserPayment;
+    @Override
+    public String toString() {
+        return "UserPaymentDTO{" +
+                "userFirstName='" + userFirstName + '\'' +
+                ", paymentStorageList=" + paymentStorageList +
+                '}';
     }
 }
