@@ -46,10 +46,11 @@ public class PaymentEnteredHandler extends UserRequestHandler {
         Double payment = Double.valueOf(userRequest.getUpdate().getMessage().getText());
 
         saveUserPayment(chatId, payment);
-        updateUserBalance(chatId, payment);
+        var balance = updateUserBalance(chatId, payment);
 
         telegramService.sendMessage(chatId, "Дякую !!!\n" +
                 "Твоя оплата у розмірі " + payment + " грн, збережена\n" +
+                "Твій поточний баланс: " + balance + " грн.\n" +
                 "Ти заслуговуєш на + в карму, і на ще один місяць корисування YouTube Premium", replyKeyboardMarkup);
 
         UserSession session = userRequest.getUserSession();
@@ -73,22 +74,22 @@ public class PaymentEnteredHandler extends UserRequestHandler {
         UserStorage userStorage = new UserStorage();
 
         userStorage.setChatId(chatId);
-        paymentStorage.setValue(Double.valueOf(payment));
+        paymentStorage.setValue(payment);
         paymentStorage.setUserStorage(userStorage);
         paymentStorage.setDate(formatDatePayment);
         paymentStorageRepository.save(paymentStorage);
     }
 
-    public void updateUserBalance(Long chatId, Double payment){
+    public Double updateUserBalance(Long chatId, Double payment){
+
         var userBalanceStorage = userBalanceStorageService.findById(chatId);
         if (userBalanceStorage.isPresent()) {
             UserBalanceStorage balanceStorage = userBalanceStorage.get();
             Double balance = balanceStorage.getUserBalance() + payment;
             balanceStorage.setUserBalance(balance);
-            userBalanceStorageService.updateBalance(balanceStorage.getUserChatId().getChatId(), balanceStorage.getUserBalance());
-        } else {
-
-
+            userBalanceStorageService.updateBalance(chatId, balance);
+            return balance;
         }
+        return 0.0;
     }
 }

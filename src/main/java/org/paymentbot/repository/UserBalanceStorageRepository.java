@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface UserBalanceStorageRepository extends CrudRepository<UserBalanceStorage, Long> {
 
     @Override
-    @Query(value = "SELECT ub FROM userBalanceTable ub WHERE ub.userChatId.chatId =:userChatId")
+    @Query(value = "SELECT ub FROM userBalanceTable ub WHERE ub.userStorage.chatId =:userChatId")
     Optional<UserBalanceStorage> findById(Long userChatId);
 
     @Override
@@ -26,7 +26,7 @@ public interface UserBalanceStorageRepository extends CrudRepository<UserBalance
     @Modifying
     @Query(value = "UPDATE userBalanceTable ub " +
             "SET ub.userBalance =:balance " +
-            "WHERE ub.userChatId.chatId =:chatId")
+            "WHERE ub.userStorage.chatId =:chatId")
     void updateBalance (@Param("chatId") Long chatId, @Param("balance") Double balance);
 
 }

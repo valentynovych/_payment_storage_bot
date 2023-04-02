@@ -1,7 +1,7 @@
 package org.paymentbot.service;
 
 import org.paymentbot.model.PaymentStorage;
-import org.paymentbot.model.UserPaymentDTO;
+import org.paymentbot.model.UserPaymentsDTO;
 import org.paymentbot.repository.PaymentStorageRepository;
 import org.paymentbot.model.UserStorage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +23,9 @@ public class PaymentStorageService {
         return paymentStorageRepository.findAllByUserStorage_ChatId(chatId);
     }
 
-    public UserPaymentDTO getUserPaymentDTO(Long chatId) {
-        List<Object[]> result = paymentStorageRepository.findAllPaymentsUserByChatId(chatId);
-        if (result.isEmpty()) {
-            return null;
-        }
-        String firstName = (String) result.get(0)[0];
-        List<PaymentStorage> paymentStorageList = result.stream()
-                .map(obj -> (PaymentStorage) obj[1])
-                .collect(Collectors.toList());
-        return new UserPaymentDTO(firstName, paymentStorageList);
+    public List<UserPaymentsDTO> findAllPaymentsAllUser(){
+        return paymentStorageRepository.findAllPaymentsAllUser();
     }
+
 
 }

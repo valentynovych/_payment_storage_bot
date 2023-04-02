@@ -7,22 +7,25 @@ import org.paymentbot.model.PaymentStorage;
 import org.paymentbot.model.UserRequest;
 import org.paymentbot.service.PaymentStorageService;
 import org.paymentbot.service.TelegramService;
+import org.paymentbot.service.UserBalanceStorageService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-public class ShowPaymentHandler extends UserRequestHandler {
+public class        ShowPaymentHandler extends UserRequestHandler {
 
     private final TelegramService telegramService;
     private final KeyboardHelper keyboardHelper;
     private final PaymentStorageService paymentStorageService;
+    private final UserBalanceStorageService userBalanceStorageService;
 
 
-    public ShowPaymentHandler(TelegramService telegramService, KeyboardHelper keyboardHelper, PaymentStorageService paymentStorageService) {
+    public ShowPaymentHandler(TelegramService telegramService, KeyboardHelper keyboardHelper, PaymentStorageService paymentStorageService, UserBalanceStorageService userBalanceStorageService) {
         this.telegramService = telegramService;
         this.keyboardHelper = keyboardHelper;
         this.paymentStorageService = paymentStorageService;
+        this.userBalanceStorageService = userBalanceStorageService;
     }
 
     @Override
@@ -43,7 +46,11 @@ public class ShowPaymentHandler extends UserRequestHandler {
     }
 
     private String generatePaymentMessage(UserRequest userRequest){
-        List<PaymentStorage> paymentStoragesList = paymentStorageService.getPaymentStorageByChatId(userRequest.getChatId());
+        var chatId = userRequest.getChatId();
+        List<PaymentStorage> paymentStoragesList = paymentStorageService.getPaymentStorageByChatId(chatId);
+        var balanceStorage = userBalanceStorageService.findById(chatId);
+        var balance = balanceStorage.get().getUserBalance();
+
         String message = "\n";
         if (paymentStoragesList.isEmpty()){
             message += "У тебе ще немає зареєстрованих оплат\n" +
@@ -53,9 +60,10 @@ public class ShowPaymentHandler extends UserRequestHandler {
             if (payment == null){
                 continue;
             }
-                message += (payment.getDate() + " : " + payment.getValue() + " грн; \n") +
+                var srr = payment.getUserStorage().getFirstName();
+                message += (srr + "  " + payment.getDate() + " : " + payment.getValue() + " грн; \n") +
                         "-----------------------------\n";
         }
-        return message;
+        return message + "\nТвій баланс: " + balance + " грн.";
     }
 }

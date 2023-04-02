@@ -1,5 +1,6 @@
 package org.paymentbot.service;
 
+import org.paymentbot.model.UserStorage;
 import org.paymentbot.repository.UserStorageRepository;
 import org.springframework.stereotype.Service;
 
@@ -18,4 +19,7 @@ public class UserStorageService {
     }
 
 
+    public void saveUser(UserStorage userStorage){
+        userStorageRepository.save(userStorage);
+    }
 }

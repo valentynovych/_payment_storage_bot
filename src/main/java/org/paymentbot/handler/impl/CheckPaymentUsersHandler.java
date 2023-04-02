@@ -2,8 +2,8 @@ package org.paymentbot.handler.impl;
 
 import org.paymentbot.constant.Constants;
 import org.paymentbot.handler.UserRequestHandler;
+import org.paymentbot.helper.KeyboardHelper;
 import org.paymentbot.model.*;
-import org.paymentbot.repository.UserBalanceStorageRepository;
 import org.paymentbot.service.PaymentStorageService;
 import org.paymentbot.service.TelegramService;
 import org.paymentbot.service.UserBalanceStorageService;
@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class CheckPaymentUsersHandler extends UserRequestHandler {
@@ -23,6 +23,7 @@ public class CheckPaymentUsersHandler extends UserRequestHandler {
     private final PaymentStorageService paymentStorageService;
     private final UserStorageService userStorageService;
     private final UserBalanceStorageService userBalanceStorageService;
+    private final KeyboardHelper keyboardHelper;
 
     @Value("${bot.owner}")
     private Long botOwner;
@@ -30,12 +31,13 @@ public class CheckPaymentUsersHandler extends UserRequestHandler {
     public CheckPaymentUsersHandler(TelegramService telegramService,
                                     PaymentStorageService paymentStorageService,
                                     UserStorageService userStorageService,
-                                    UserBalanceStorageService userBalanceStorageService) {
+                                    UserBalanceStorageService userBalanceStorageService, KeyboardHelper keyboardHelper) {
         this.telegramService = telegramService;
         this.paymentStorageService = paymentStorageService;
         this.userStorageService = userStorageService;
         this.userBalanceStorageService = userBalanceStorageService;
 
+        this.keyboardHelper = keyboardHelper;
     }
 
     @Override
@@ -49,17 +51,18 @@ public class CheckPaymentUsersHandler extends UserRequestHandler {
         if (userRequest.getChatId().equals(botOwner)) {
 
             List<Long> listChatId= userStorageService.findAllChatIdUser();
-            List<UserPaymentDTO> userPaymentDTOList= new ArrayList<>();
-
             userBalanceStorageService.checkIsEmptyBalance(listChatId);
 
-            for (Long chatId : listChatId ) {
-                UserPaymentDTO userPaymentDTO = paymentStorageService.getUserPaymentDTO(chatId);
-                userPaymentDTOList.add(userPaymentDTO);
-            }
-            telegramService.sendMessage(userRequest.getChatId(), generateCheckPaymentMessage(userPaymentDTOList));
+            List<UserPaymentsDTO> userPaymentDTOList = paymentStorageService.findAllPaymentsAllUser();
+            userPaymentDTOList.stream().map(UserPaymentsDTO::getFirstName);
+
+            var message = generateCheckPaymentMessage(userPaymentDTOList);
+
+            telegramService.sendMessage(userRequest.getChatId(), message);
+
         } else {
-            telegramService.sendMessage(userRequest.getChatId(), "Sorry !\nУ вас немає доступу до цієї команди");
+
+            telegramService.sendMessage(userRequest.getChatId(), "Sorry !!!\nУ вас немає доступу до цієї команди", keyboardHelper.buildMailMenu());
         }
     }
 
@@ -68,29 +71,22 @@ public class CheckPaymentUsersHandler extends UserRequestHandler {
         return true;
     }
 
-    private String generateCheckPaymentMessage(List<UserPaymentDTO> userPaymentDTOList) {
+    private String generateCheckPaymentMessage(List<UserPaymentsDTO> userPaymentDTOList) {
 
         String message = "";
-        for (UserPaymentDTO user : userPaymentDTOList) {
+        for (UserPaymentsDTO user : userPaymentDTOList) {
             if (user == null) {
                 continue;
             }
-            message += "User: " + user.getUserFirstName() + "\n";
-            List<PaymentStorage> paymentStorageList = user.getPaymentStorageList();
-            for (PaymentStorage paymentStorage : paymentStorageList){
-                if (paymentStorage == null) {
-                    message += "Payment null\n";
-            } else {
-                    message += String.format("Payment: %s, Date: %s\n",
-                            paymentStorage.getValue(), paymentStorage.getDate());
-                }
+
+            if (!message.contains(user.getFirstName())){
+                message += "=====================\nUser: " + user.getFirstName() + "\n";
             }
-            message += "=====================\n";
+                message += String.format("Payment: %s Date: %s\n", user.getValue(), user.getDate());
+
+            }
+        return message;
         }
-            return message;
+
         }
 
-
-
-
-    }

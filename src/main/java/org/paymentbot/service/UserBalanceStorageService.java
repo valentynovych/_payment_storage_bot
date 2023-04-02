@@ -5,7 +5,6 @@ import org.paymentbot.model.UserBalanceStorage;
 import org.paymentbot.model.UserStorage;
 import org.paymentbot.repository.UserBalanceStorageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -37,32 +36,44 @@ public class UserBalanceStorageService {
     }
 
     public void checkIsEmptyBalance(List<Long> listChatId) {
-        List<UserBalanceStorage> optionalList = findALl();
-        if (optionalList.isEmpty()) {
-            saveAll(addMissingBalance(listChatId));
-        } else {
 
-            if (listChatId.size() > optionalList.size()) {
-                for (UserBalanceStorage userBalance : optionalList) {
-                    List<Long> listEqualsChatId = new ArrayList<>();
-                    listEqualsChatId.add(userBalance.getUserChatId().getChatId());
-                    listChatId.removeAll(listEqualsChatId);
-                    saveAll(addMissingBalance(listChatId));
+        List<UserBalanceStorage> balanceStorages = findALl();
+        if (balanceStorages.isEmpty()) {
+            saveAll(addMissingBalance(listChatId));
+        } else if (listChatId.size() > balanceStorages.size()) {
+            List<Long> listEqualsChatId = new ArrayList<>();
+                for (UserBalanceStorage userBalance : balanceStorages) {
+                    listEqualsChatId.add(userBalance.getUserStorage().getChatId());
                 }
+
+            listChatId.removeAll(listEqualsChatId);
+            saveAll(addMissingBalance(listChatId));
             }
         }
-    }
 
-    private List<UserBalanceStorage> addMissingBalance(List<Long> chaiId){
-        List<UserBalanceStorage> userEmptyList = new ArrayList<UserBalanceStorage>();
-        for (Long chatId : chaiId) {
-            UserBalanceStorage newBalance = new UserBalanceStorage();
-            UserStorage userStorage = new UserStorage();
-            userStorage.setChatId(chatId);
-            newBalance.setUserChatId(userStorage);
-            newBalance.setUserBalance(0.0);
-            userEmptyList.add(newBalance);
+    private List<UserBalanceStorage> addMissingBalance(List<Long> chaiIdList){
+
+        List<UserBalanceStorage> userEmptyList = new ArrayList<>();
+        for (Long chatId : chaiIdList) {
+            userEmptyList.add(createNewBalance(chatId));
         }
         return userEmptyList;
+    }
+
+    public void addUserBalance(Long chatId){
+
+        var newBalance = createNewBalance(chatId);
+        userBalanceStorageRepository.save(newBalance);
+
+    }
+
+    private UserBalanceStorage createNewBalance(Long chatId){
+
+        UserBalanceStorage newBalance = new UserBalanceStorage();
+        UserStorage userStorage = new UserStorage();
+        userStorage.setChatId(chatId);
+        newBalance.setUserStorage(userStorage);
+        newBalance.setUserBalance(0.0);
+        return newBalance;
     }
 }

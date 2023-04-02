@@ -1,6 +1,8 @@
 target/
 .idea/
 out/
+src/main/resources/META-INF/
+src/test/
+src/main/resources/application.properties
 demo.gif
 readme.md
-src/main/resources/META-INF/

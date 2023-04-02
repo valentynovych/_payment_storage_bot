@@ -3,6 +3,7 @@ package org.paymentbot.handler.impl;
 import org.paymentbot.constant.Constants;
 import org.paymentbot.model.UserStorage;
 import org.paymentbot.repository.UserStorageRepository;
+import org.paymentbot.service.UserBalanceStorageService;
 import org.springframework.stereotype.Component;
 
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -20,13 +21,15 @@ public class StartCommandHandler extends UserRequestHandler {
     private final TelegramService telegramService;
     private final KeyboardHelper keyboardHelper;
     private final UserStorageRepository userStorageRepository;
+    private final UserBalanceStorageService userBalanceStorageService;
 
     public StartCommandHandler(TelegramService telegramService,
                                KeyboardHelper keyboardHelper,
-                               UserStorageRepository userStorageRepository) {
+                               UserStorageRepository userStorageRepository, UserBalanceStorageService userBalanceStorageService) {
         this.telegramService = telegramService;
         this.keyboardHelper = keyboardHelper;
         this.userStorageRepository = userStorageRepository;
+        this.userBalanceStorageService = userBalanceStorageService;
     }
 
     @Override
@@ -74,7 +77,10 @@ public class StartCommandHandler extends UserRequestHandler {
                 userStorage.setUsername(chat.getUserName());
                 userStorage.setFirstName(chat.getFirstName());
                 userStorage.setLastName(chat.getLastName());
+
                 userStorageRepository.save(userStorage);
+                userBalanceStorageService.addUserBalance(chatId);
+
                 }
     }
 }

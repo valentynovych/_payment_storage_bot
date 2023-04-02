@@ -9,18 +9,21 @@ public class UserBalanceStorage {
     private Long balanceId;
     @OneToOne
     @JoinColumn(name = "chatId")
-    private UserStorage userChatId;
+    private UserStorage userStorage;
     private Double userBalance;
 
-    public UserStorage getUserChatId() {
-        return userChatId;
+    public UserStorage getUserStorage() {
+        return userStorage;
     }
 
-    public void setUserChatId(UserStorage userChatId) {
-        this.userChatId = userChatId;
+    public void setUserStorage(UserStorage userStorage) {
+        this.userStorage = userStorage;
     }
 
     public Double getUserBalance() {
+        if (userBalance == null){
+            return 0.0;
+        }
         return userBalance;
     }
 
